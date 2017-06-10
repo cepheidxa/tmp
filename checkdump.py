@@ -5,6 +5,8 @@
 class Dump:
     def __init__(self, filename):
         self.__file = filename
+    def isprintable(self, x):
+        return x.isprintable()
     def getCharacter(self, outfile):
         fd = open(self.__file, 'rb')
         ofd = open(outfile, 'w')
