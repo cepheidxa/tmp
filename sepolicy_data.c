@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 	unsigned char *buf;
 	unsigned char *ch;
 	int i;
+
 	if (argc < 2)
 		return -1;
 

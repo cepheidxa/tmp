@@ -11,6 +11,7 @@ void *wait_thread(void *arg)
 {
 	int status;
 	int ret = wait(&status);
+
 	if (ret == -1) {
 		perror("wait");
 		exit(EXIT_FAILURE);
@@ -24,13 +25,16 @@ void *wait_thread(void *arg)
 int write_pipe(int fd, int n, int size)
 {
 	char *p = malloc(size);
+
 	if (p == NULL) {
 		perror("malloc");
 		exit(EXIT_FAILURE);
 	}
 	int i;
+
 	for (i = 0; i < n; i++) {
 		int ret = write(fd, p, size);
+
 		if (ret == -1) {
 			perror("write");
 			exit(EXIT_FAILURE);
@@ -43,13 +47,16 @@ int write_pipe(int fd, int n, int size)
 int read_pipe(int fd, int n, int size)
 {
 	char *p = malloc(size);
+
 	if (p == NULL) {
 		perror("malloc");
 		exit(EXIT_FAILURE);
 	}
 	int i;
+
 	for (i = 0; i < n; i++) {
 		int ret = read(fd, p, size);
+
 		if (ret == -1) {
 			perror("read");
 			exit(EXIT_FAILURE);
@@ -62,6 +69,7 @@ int read_pipe(int fd, int n, int size)
 int main(int argc, char *argv[])
 {
 	int pipefd[2];
+
 	if (pipe(pipefd) == -1) {
 		perror("pipe");
 		exit(EXIT_FAILURE);
@@ -78,6 +86,7 @@ int main(int argc, char *argv[])
 	} else if (pid != 0) {
 		struct timespec start, end;
 		pthread_t tid;
+
 		close(pipefd[0]);
 		pthread_create(&tid, NULL, wait_thread, NULL);
 		clock_gettime(CLOCK_MONOTONIC, &start);
@@ -86,19 +95,18 @@ int main(int argc, char *argv[])
 		close(pipefd[1]);
 		int second = end.tv_sec - start.tv_sec;
 		long nsecond = end.tv_nsec - start.tv_nsec;
+
 		if (nsecond < 0) {
 			second -= 1;
 			nsecond += 1000000000L;
 		}
-		double width =
-		    (double)n * size / 1024 / 1024 / (second +
-						      (double)(nsecond /
-							       1000000000.0));
-		printf("write time: %d.%03d, width %d M\n", second,
-		       (int)(nsecond / 1000000), (int)width);
+		double width = (double)n * size / 1024 / 1024 / (second + (double)(nsecond / 1000000000.0));
+
+		printf("write time: %d.%03d, width %d M\n", second, (int)(nsecond / 1000000), (int)width);
 		usleep(10000000);
 	} else {
 		struct timespec start, end;
+
 		close(pipefd[1]);
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		read_pipe(pipefd[0], n, size);
@@ -106,12 +114,12 @@ int main(int argc, char *argv[])
 		close(pipefd[0]);
 		int second = end.tv_sec - start.tv_sec;
 		long nsecond = end.tv_nsec - start.tv_nsec;
+
 		if (nsecond < 0) {
 			second -= 1;
 			nsecond += 1000000000L;
 		}
-		printf("read time: %d.%03d\n", second,
-		       (int)(nsecond / 1000000));
+		printf("read time: %d.%03d\n", second, (int)(nsecond / 1000000));
 	}
 	return 0;
 }

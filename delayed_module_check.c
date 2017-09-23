@@ -13,6 +13,7 @@ int start_delayed_module_init(void)
 	char filename[] = "a.txt";
 	int ret = 0;
 	int fd = open(filename, O_RDWR);
+
 	if (fd == -1) {
 		error(-1, errno, "%s open failed.", filename);
 		return -1;
@@ -33,6 +34,7 @@ int wait_for_delayed_module_complete(void)
 	int ret = 0;
 	int fd = open(filename, O_RDONLY);
 	int retry_count = 100000 * 30;
+
 	if (fd == -1) {
 		error(-1, errno, "%s open failed.", filename);
 		return -1;
