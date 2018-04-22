@@ -1,9 +1,27 @@
 #!/usr/bin/env python3
 
 import os
+import os.path
 
-#with os.popen('find' + directorys + '-type f') as fd:
-with os.popen('find . -type f') as fd:
+
+def find_vendor_system_compiled_directory():
+    directory='./out/target/product/'
+    if not os.path.isdir(directory):
+        print(directory, 'directory not exist, please compile the project first')
+        exit(-1)
+    for file in os.listdir(directory):
+        if not os.path.isdir(os.path.join(directory, file)):
+            continue
+        subfiles = os.listdir(os.path.join(directory, file))
+        if 'system' in subfiles and 'vendor' in subfiles:
+            return os.path.join(directory, file)
+        else:
+            print('vendor and system director is not found')
+            exit(-1)
+
+directory = find_vendor_system_compiled_directory()
+
+with os.popen('find {0}/system {0}/vendor -type f'.format(directory)) as fd:
     files = fd.read()
 
 files = files.split()
