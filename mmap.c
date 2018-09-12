@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	}
 
 	int fd2 = open(destfile, O_RDWR | O_CREAT, S_IRWXU);
-	if (fd == -1) {
+	if (fd2 == -1) {
 		error(-1, errno, "file(%s) open failed.", destfile);
 	}
 
