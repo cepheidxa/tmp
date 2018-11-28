@@ -13,14 +13,13 @@ import sys
 file_included_as_source_files = []
 
 # some file include source file, so check #include statement in the beginning
-def check_include_files(file):
+def check_include_files(filecontents):
     #delete comments first
     lines = []
-    fp = open(file,'r')
     flag = 0
     quote = 0
  
-    for line in fp:
+    for line in filecontents:
         myline = ''
         length = len(line)
         for index in range(length):
@@ -45,18 +44,16 @@ def check_include_files(file):
             myline += line[index]
         if line.strip() != '' and line.strip() != '\n':
             lines.append(line)
-    fp.close()
     
     #check include file except included source file in structure, check (){}[] sign
     contents = ''.join(lines)
-    start_pos = 0
     includefiles = []
-    searchresult = re.search(re.compile('#include\s*[<"][^>"<]+[>"]'), contents[start_pos:])
+    searchresult = re.search(re.compile('#include\s*[<"][^>"<]+[>"]'), contents)
     while searchresult:
         #print(searchresult)
         pos = searchresult.span()
-        start_pos += pos[1]
-        structuresignmatch = re.search(re.compile('[(){}\[\]]'), contents[start_pos:])
+        contents = contents[pos[1]:]
+        structuresignmatch = re.search(re.compile('[(){}\[\]]'), contents)
         includefile = re.sub(re.compile('^\s*#include\s*[<"]'), '', searchresult.group(0))
         includefile = re.sub(re.compile('[>"].*'), '', includefile)
         includefile = includefile.strip()
@@ -64,20 +61,31 @@ def check_include_files(file):
         if not structuresignmatch:
             includefiles.append(includefile)
         elif not re.match(re.compile('[)}\]]'), structuresignmatch.group(0)):
-            includefiles.append(includefile)
+            try:
+                if contents[contents.index('\n')-1] != '\\':
+                    includefiles.append(includefile)
+            except ValueError:
+                includefiles.append(includefile)
         else:
             file_included_as_source_files.append(os.path.basename(includefile))
-        searchresult = re.search(re.compile('#include\s*[<"][^>"<]+[>"]'), contents[start_pos:])
+        searchresult = re.search(re.compile('#include\s*[<"][^>"<]+[>"]'), contents)
     return includefiles
 
 
 def add_pragma_message_in_file(file):
     if os.path.basename(file) in file_included_as_source_files:
         return
-    includefiles = check_include_files(file)
+
     contents = []
-    fd = open(file)
-    for line in fd:
+    filecontents = []
+
+    with open(file) as fd:
+        filecontents = fd.readlines()
+
+    includefiles = check_include_files(filecontents)
+
+    contents = []
+    for line in filecontents:
         if not re.match(re.compile('^\s*#include\s*[<"][^<>"]+[>"].*'), line):
             contents.append(line)
             continue
@@ -90,7 +98,7 @@ def add_pragma_message_in_file(file):
         contents.append(line)
         if includefile in includefiles:
             contents.append('#pragma message("{0} is included in {1}")\n'.format(includefile, file))
-    fd.close()
+
     with open(file, 'w') as outfd:
         outfd.write(''.join(contents))
 
